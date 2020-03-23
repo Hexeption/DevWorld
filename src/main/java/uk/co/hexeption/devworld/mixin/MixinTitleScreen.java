@@ -1,5 +1,6 @@
 package uk.co.hexeption.devworld.mixin;
 
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
@@ -94,7 +95,7 @@ public class MixinTitleScreen extends Screen {
         int l = MathHelper.ceil(g * 255.0F) << 24;
         if ((l & -67108864) != 0) {
 
-            drawCenteredString(minecraft.textRenderer, "Dev World", textX, textY, 16777215 | l);
+            drawCenteredString(MinecraftClient.getInstance().textRenderer, "Dev World", textX, textY, 16777215 | l);
         }
 
         if (buttonDelete.isHovered() && !buttonDelete.active) {
