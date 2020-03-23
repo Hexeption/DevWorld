@@ -6,7 +6,7 @@ pipeline {
         stage('Build') {
             steps {
                 sh 'chmod +x gradlew'
-                sh './gradlew build --console=plain'
+                sh './gradlew clean build --console=plain --refresh-dependencies'
             }
         }
         stage('Release') {
@@ -17,7 +17,7 @@ pipeline {
             }
             steps {
                 withCredentials([string(credentialsId: 'CURSE_API_KEY', variable: 'CURSE_API_KEY'),string(credentialsId: 'REPO_PASSWORD', variable: 'REPO_PASSWORD')]) {
-                    sh "chmod +x gradlew && ./gradlew publish curseforge -PmavenPass=$REPO_USERNAME -Pcurse_api_key=$CURSE_API_KEY --console=plain"
+                    sh "chmod +x gradlew && ./gradlew publish curseforge -PmavenPass=$REPO_USERNAME -Pcurse_api_key=$CURSE_API_KEY --console=plain --refresh-dependencies"
                 }
             }
         }
