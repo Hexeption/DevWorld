@@ -1,6 +1,7 @@
 plugins {
     id 'fabric-loom' version '0.2.6-SNAPSHOT'
     id 'maven-publish'
+    id 'com.matthewprenger.cursegradle' version "1.1.2"
 }
 
 sourceCompatibility = JavaVersion.VERSION_1_8
@@ -9,6 +10,9 @@ targetCompatibility = JavaVersion.VERSION_1_8
 archivesBaseName = project.archives_base_name
 version = project.mod_version
 group = project.maven_group
+
+def ENV = System.getenv()
+version = version + "+" + (ENV.BUILD_NUMBER ? ("build." + ENV.BUILD_NUMBER) : "custom")
 
 minecraft {
 }
@@ -72,5 +76,35 @@ publishing {
     repositories {
         // uncomment to publish to the local maven
         // mavenLocal()
+        if (project.hasProperty("mavenPass")) {
+            maven {
+                url = "https://repo.hexeption.co.uk/artifactory/hex-mods/"
+                credentials {
+                    username = "Admin"
+                    password = project.getProperty("mavenPass")
+                }
+            }
+        }
+    }
+}
+
+curseforge {
+    if (project.hasProperty('curse_api_key')) {
+        apiKey = project.getProperty('curse_api_key')
+    }
+    project {
+        id = '370419'
+        changelog = 'A changelog can be found at https://github.com/hexeption/devworld'
+        releaseType = 'beta'
+        addGameVersion '1.15.2'
+        mainArtifact(remapJar) {
+            displayName = "DevWorld v$version for $project.minecraft_version"
+        }
+        afterEvaluate {
+            uploadTask.dependsOn("remapJar")
+        }
+    }
+    options {
+        forgeGradleIntegration = false
     }
 }
