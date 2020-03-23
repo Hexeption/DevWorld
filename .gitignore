@@ -1,1 +1,10 @@
-# Created by .ignore support plugin (hsz.mobi)
+/*
+!/.gitignore
+!/src
+!/gradle
+!/gradlew
+!/gradlew.bat
+!/README.md
+!/LICENSE
+!/build.gradle
+!/gradle.properties

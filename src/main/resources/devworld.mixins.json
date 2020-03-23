@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "package": "uk.co.hexeption.devworld.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+  ],
+  "client": [
+    "MixinTitleScreen"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
