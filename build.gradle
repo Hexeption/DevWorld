@@ -96,7 +96,7 @@ curseforge {
         id = '370419'
         changelog = 'A changelog can be found at https://github.com/hexeption/devworld'
         releaseType = 'beta'
-        addGameVersion '1.15.2'
+        addGameVersion '1.16-Snapshot'
         mainArtifact(remapJar) {
             displayName = "DevWorld v$version for $project.minecraft_version"
         }
