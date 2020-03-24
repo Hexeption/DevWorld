@@ -1,5 +1,8 @@
 package uk.co.hexeption.devworld;
 
+import com.google.gson.JsonElement;
+import com.mojang.datafixers.Dynamic;
+import com.mojang.datafixers.types.JsonOps;
 import java.io.File;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -31,9 +34,12 @@ public class Devworld implements ModInitializer {
 
         MinecraftClient.getInstance().openScreen(null);
 
-        FlatChunkGeneratorConfig flatChunkGeneratorConfig = FlatChunkGeneratorConfig.fromString("minecraft:bedrock,3*minecraft:stone,52*minecraft:sandstone;minecraft:desert;");
+        LevelInfo levelInfo = new LevelInfo(0, GameMode.CREATIVE, false, false, LevelGeneratorType.FLAT);
 
-        LevelInfo levelInfo = new LevelInfo(0, GameMode.CREATIVE, false, false, LevelGeneratorType.FLAT.loadOptions(flatChunkGeneratorConfig.toDynamic(NbtOps.INSTANCE)));
+        FlatChunkGeneratorConfig flatChunkGeneratorConfig = FlatChunkGeneratorConfig.fromString("minecraft:bedrock,3*minecraft:stone,52*minecraft:sandstone;minecraft:desert;");
+        CompoundTag worldGenTag = (CompoundTag) flatChunkGeneratorConfig.toDynamic(NbtOps.INSTANCE).getValue();
+
+        levelInfo.setGeneratorOptions((JsonElement) Dynamic.convert(NbtOps.INSTANCE, JsonOps.INSTANCE, worldGenTag));
 
         File gameDir = MinecraftClient.getInstance().runDirectory;
         LevelStorage levelStorage = new LevelStorage(gameDir.toPath().resolve("saves"), gameDir.toPath().resolve("backups"), null);
@@ -48,7 +54,7 @@ public class Devworld implements ModInitializer {
 
         // World Generator
         worldData.putString("generatorName", "flat");
-        worldData.put("generatorOptions", flatChunkGeneratorConfig.toDynamic(NbtOps.INSTANCE).getValue());
+        worldData.put("generatorOptions", worldGenTag);
 
         // Cheat Mode
         worldData.putInt("GameType", GameMode.CREATIVE.getId());
@@ -68,7 +74,7 @@ public class Devworld implements ModInitializer {
         worldData.put("GameRules", gamerules);
 
         // Save World
-        LevelProperties levelProperties = new LevelProperties(worldData, MinecraftClient.getInstance().getDataFixer(), 15, null);
+        LevelProperties levelProperties = new LevelProperties(worldData, null, 14, null);
         worldSaveHandler.saveWorld(levelProperties);
 
         // Start the World
