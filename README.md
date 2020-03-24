@@ -8,7 +8,7 @@ Inspired by DevWorld2 by FireBall1725
 ![](https://img.hexeption.co.uk/J7IflFyPXW.png)
 
 # Installation
-Fine latest version at https://repo.hexeption.co.uk/artifactory/hex-mods/uk/co/hexeption/DevWorld_1.16/
+Find latest version at https://repo.hexeption.co.uk/artifactory/hex-mods/uk/co/hexeption/DevWorld_1.16/
 ```gradle
 repositories { maven { name "Hexeption Mod Repo" url "https://repo.hexeption.co.uk/artifactory/hex-mods/" } } 
 
