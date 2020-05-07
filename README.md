@@ -1,5 +1,5 @@
 # Dev World (Fabric)
-[![](https://img.shields.io/jenkins/build/https/ci.hexeption.co.uk/job/DevWorld/job/1.16?label=CI&style=for-the-badge)](https://ci.hexeption.co.uk)
+[![](https://img.shields.io/jenkins/build/https/ci.hexeption.dev/job/DevWorld/job/1.16?label=CI&style=for-the-badge)](https://ci.hexeption.co.uk)
 
 DevWorld is a Minecraft mod that adds a 1-click development world.
 
