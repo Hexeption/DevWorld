@@ -78,9 +78,9 @@ publishing {
         // mavenLocal()
         if (project.hasProperty("mavenPass")) {
             maven {
-                url = "https://repo.hexeption.co.uk/artifactory/hex-mods/"
+                url = "https://repo.hexeption.dev/repository/hex-mods/"
                 credentials {
-                    username = "Admin"
+                    username = "admin"
                     password = project.getProperty("mavenPass")
                 }
             }
