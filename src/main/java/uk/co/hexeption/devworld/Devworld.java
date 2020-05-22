@@ -1,24 +1,44 @@
 package uk.co.hexeption.devworld;
 
+import static net.minecraft.world.gen.GeneratorOptions.method_28608;
+
+import com.google.common.collect.Maps;
+import com.mojang.serialization.DataResult;
+import com.mojang.serialization.Dynamic;
 import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.api.ModInitializer;
+import net.minecraft.block.Blocks;
+import net.minecraft.class_5311;
+import net.minecraft.class_5315;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.datafixer.NbtOps;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.util.Util;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.GameMode;
+import net.minecraft.world.GameRules;
+import net.minecraft.world.biome.Biomes;
+import net.minecraft.world.dimension.DimensionType;
+import net.minecraft.world.gen.GeneratorOptions;
+import net.minecraft.world.gen.chunk.FlatChunkGenerator;
 import net.minecraft.world.gen.chunk.FlatChunkGeneratorConfig;
-import net.minecraft.world.level.LevelGeneratorType;
+import net.minecraft.world.gen.chunk.FlatChunkGeneratorLayer;
 import net.minecraft.world.level.LevelInfo;
 import net.minecraft.world.level.LevelProperties;
 import net.minecraft.world.level.storage.LevelStorage;
 import net.minecraft.world.level.storage.LevelStorage.Session;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 @Environment(EnvType.CLIENT)
 public class Devworld implements ModInitializer {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public static Devworld INSTANCE;
 
@@ -33,10 +53,14 @@ public class Devworld implements ModInitializer {
 
         MinecraftClient.getInstance().openScreen(null);
 
-        FlatChunkGeneratorConfig flatChunkGeneratorConfig = FlatChunkGeneratorConfig.fromString("minecraft:bedrock,3*minecraft:stone,52*minecraft:sandstone;minecraft:desert;");
+        GeneratorOptions DEVWORLD_GENERATOR = new GeneratorOptions(0L, false, false, method_28608(DimensionType.method_28517(0L), new FlatChunkGenerator(getDevWorldGeneratorConfig())));
 
-        LevelInfo levelInfo = new LevelInfo(worldName, 0, GameMode.CREATIVE, false, false, Difficulty.NORMAL,
-            LevelGeneratorType.FLAT.loadOptions(flatChunkGeneratorConfig.toDynamic(NbtOps.INSTANCE)));
+        GameRules gameRules = new GameRules();
+        gameRules.get(GameRules.DO_DAYLIGHT_CYCLE).set(false, null);
+        gameRules.get(GameRules.DO_WEATHER_CYCLE).set(false, null);
+        gameRules.get(GameRules.DO_MOB_SPAWNING).set(false, null);
+
+        LevelInfo levelInfo = new LevelInfo(worldName, GameMode.CREATIVE, false, Difficulty.NORMAL, false, gameRules, DEVWORLD_GENERATOR);
 
         File gameDir = MinecraftClient.getInstance().runDirectory;
         LevelStorage levelStorage = new LevelStorage(gameDir.toPath().resolve("saves"), gameDir.toPath().resolve("backups"), null);
@@ -45,16 +69,12 @@ public class Devworld implements ModInitializer {
 
             CompoundTag worldData = new CompoundTag();
 
-            // Spawn Location
-            worldData.putInt("SpawnX", 0);
-            worldData.putInt("SpawnY", 55);
-            worldData.putInt("SpawnZ", 0);
-
             worldData.putInt("Difficulty", 2);
 
             // World Generator
             worldData.putString("generatorName", "flat");
-            worldData.put("generatorOptions", flatChunkGeneratorConfig.toDynamic(NbtOps.INSTANCE).getValue());
+            DataResult tagDataResult = GeneratorOptions.CODEC.encodeStart(NbtOps.INSTANCE, DEVWORLD_GENERATOR);
+            tagDataResult.resultOrPartial(Util.method_29188("WorldGenSettings: ", LOGGER::error)).ifPresent((tag) -> worldData.put("WorldGenSettings", (Tag) tag));
 
             // Cheat Mode
             worldData.putInt("GameType", GameMode.CREATIVE.getId());
@@ -67,14 +87,17 @@ public class Devworld implements ModInitializer {
             worldData.putLong("Time", 6000);
             worldData.putLong("DayTime", 6000);
 
-            // Game Rules
-            CompoundTag gamerules = new CompoundTag();
-            gamerules.putString("doWeatherCycle", "false");
-            gamerules.putString("doDaylightCycle", "false");
-            worldData.put("GameRules", gamerules);
+            Dynamic dynamic = new Dynamic(NbtOps.INSTANCE, worldData);
+            class_5315 lv = class_5315.method_29023(dynamic);
 
-            // Save World
-            LevelProperties levelProperties = new LevelProperties(worldData, MinecraftClient.getInstance().getDataFixer(), 16, null);
+            levelInfo = levelInfo.method_28383(dynamic, DEVWORLD_GENERATOR); // Sets Cheat mode enabled
+
+            LevelProperties levelProperties = new LevelProperties(levelInfo).method_29029(dynamic, MinecraftClient.getInstance().getDataFixer(), 16, null, levelInfo, lv);
+
+            // Spawn Location
+            levelProperties.setSpawnX(0);
+            levelProperties.setSpawnY(55);
+            levelProperties.setSpawnZ(0);
 
             session.method_27426(levelProperties, worldData);
             session.save(worldName);
@@ -85,6 +108,16 @@ public class Devworld implements ModInitializer {
 
         // Start the World
         MinecraftClient.getInstance().startIntegratedServer(worldName, levelInfo);
+    }
+
+    private FlatChunkGeneratorConfig getDevWorldGeneratorConfig() {
+        FlatChunkGeneratorConfig flatChunkGeneratorConfig = new FlatChunkGeneratorConfig(new class_5311(Optional.of(class_5311.field_24823), Maps.newHashMap()));
+        flatChunkGeneratorConfig.setBiome(Biomes.PLAINS);
+        flatChunkGeneratorConfig.getLayers().add(new FlatChunkGeneratorLayer(1, Blocks.BEDROCK));
+        flatChunkGeneratorConfig.getLayers().add(new FlatChunkGeneratorLayer(3, Blocks.STONE));
+        flatChunkGeneratorConfig.getLayers().add(new FlatChunkGeneratorLayer(52, Blocks.SANDSTONE));
+        flatChunkGeneratorConfig.updateLayerBlocks();
+        return flatChunkGeneratorConfig;
     }
 
     public void deleteWorld() {
