@@ -5,6 +5,7 @@ import static net.minecraft.world.gen.GeneratorOptions.method_28608;
 import com.google.common.collect.Maps;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.Dynamic;
+import com.mojang.serialization.Lifecycle;
 import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
@@ -14,11 +15,13 @@ import net.fabricmc.api.ModInitializer;
 import net.minecraft.block.Blocks;
 import net.minecraft.class_5311;
 import net.minecraft.class_5315;
+import net.minecraft.class_5359;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.datafixer.NbtOps;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.util.Util;
+import net.minecraft.util.registry.RegistryTracker;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.GameRules;
@@ -58,12 +61,13 @@ public class Devworld implements ModInitializer {
         GameRules gameRules = new GameRules();
         gameRules.get(GameRules.DO_DAYLIGHT_CYCLE).set(false, null);
         gameRules.get(GameRules.DO_WEATHER_CYCLE).set(false, null);
-        gameRules.get(GameRules.DO_MOB_SPAWNING).set(false, null);
+        gameRules.get(GameRules.field_19390).set(false, null);
 
-        LevelInfo levelInfo = new LevelInfo(worldName, GameMode.CREATIVE, false, Difficulty.NORMAL, false, gameRules, DEVWORLD_GENERATOR);
+        LevelInfo levelInfo = new LevelInfo(worldName, GameMode.CREATIVE, false, Difficulty.NORMAL, false, gameRules, class_5359.field_25393);
 
         File gameDir = MinecraftClient.getInstance().runDirectory;
         LevelStorage levelStorage = new LevelStorage(gameDir.toPath().resolve("saves"), gameDir.toPath().resolve("backups"), null);
+        LevelProperties levelProperties = null;
         try {
             Session session = levelStorage.createSession(worldName);
 
@@ -87,19 +91,22 @@ public class Devworld implements ModInitializer {
             worldData.putLong("Time", 6000);
             worldData.putLong("DayTime", 6000);
 
+            worldData.put("GameRules", gameRules.toNbt());
+
             Dynamic dynamic = new Dynamic(NbtOps.INSTANCE, worldData);
             class_5315 lv = class_5315.method_29023(dynamic);
 
-            levelInfo = levelInfo.method_28383(dynamic, DEVWORLD_GENERATOR); // Sets Cheat mode enabled
+            levelInfo = LevelInfo.method_28383(dynamic, class_5359.field_25393); // Sets Cheat mode enabled
 
-            LevelProperties levelProperties = new LevelProperties(levelInfo).method_29029(dynamic, MinecraftClient.getInstance().getDataFixer(), 16, null, levelInfo, lv);
+             levelProperties = new LevelProperties(levelInfo, DEVWORLD_GENERATOR, Lifecycle.stable())
+                .method_29029(dynamic, MinecraftClient.getInstance().getDataFixer(), 16, null, levelInfo, lv, DEVWORLD_GENERATOR, Lifecycle.stable());
 
             // Spawn Location
             levelProperties.setSpawnX(0);
             levelProperties.setSpawnY(55);
             levelProperties.setSpawnZ(0);
 
-            session.method_27426(levelProperties, worldData);
+            session.method_27426(RegistryTracker.create(), levelProperties, worldData);
             session.save(worldName);
             session.close();
         } catch (IOException e) {
@@ -107,7 +114,7 @@ public class Devworld implements ModInitializer {
         }
 
         // Start the World
-        MinecraftClient.getInstance().startIntegratedServer(worldName, levelInfo);
+        MinecraftClient.getInstance().method_29607(worldName, levelProperties.getLevelInfo(), RegistryTracker.create(), DEVWORLD_GENERATOR);
     }
 
     private FlatChunkGeneratorConfig getDevWorldGeneratorConfig() {
@@ -133,7 +140,7 @@ public class Devworld implements ModInitializer {
 
     public boolean loadWorld() {
         if (MinecraftClient.getInstance().getLevelStorage().levelExists(worldName)) {
-            MinecraftClient.getInstance().startIntegratedServer(worldName, null);
+            MinecraftClient.getInstance().method_29606(worldName);
             return true;
         }
         return false;
