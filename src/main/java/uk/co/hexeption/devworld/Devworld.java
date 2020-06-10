@@ -13,13 +13,11 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.block.Blocks;
-import net.minecraft.class_5311;
-import net.minecraft.class_5315;
-import net.minecraft.class_5359;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.datafixer.NbtOps;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.resource.DataPackSettings;
 import net.minecraft.util.Util;
 import net.minecraft.util.registry.RegistryTracker;
 import net.minecraft.world.Difficulty;
@@ -31,10 +29,12 @@ import net.minecraft.world.gen.GeneratorOptions;
 import net.minecraft.world.gen.chunk.FlatChunkGenerator;
 import net.minecraft.world.gen.chunk.FlatChunkGeneratorConfig;
 import net.minecraft.world.gen.chunk.FlatChunkGeneratorLayer;
+import net.minecraft.world.gen.chunk.StructuresConfig;
 import net.minecraft.world.level.LevelInfo;
 import net.minecraft.world.level.LevelProperties;
 import net.minecraft.world.level.storage.LevelStorage;
 import net.minecraft.world.level.storage.LevelStorage.Session;
+import net.minecraft.world.level.storage.SaveVersionInfo;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -63,7 +63,7 @@ public class Devworld implements ModInitializer {
         gameRules.get(GameRules.DO_WEATHER_CYCLE).set(false, null);
         gameRules.get(GameRules.field_19390).set(false, null);
 
-        LevelInfo levelInfo = new LevelInfo(worldName, GameMode.CREATIVE, false, Difficulty.NORMAL, false, gameRules, class_5359.field_25393);
+        LevelInfo levelInfo = new LevelInfo(worldName, GameMode.CREATIVE, false, Difficulty.NORMAL, false, gameRules, DataPackSettings.SAFE_MODE);
 
         File gameDir = MinecraftClient.getInstance().runDirectory;
         LevelStorage levelStorage = new LevelStorage(gameDir.toPath().resolve("saves"), gameDir.toPath().resolve("backups"), null);
@@ -94,11 +94,11 @@ public class Devworld implements ModInitializer {
             worldData.put("GameRules", gameRules.toNbt());
 
             Dynamic dynamic = new Dynamic(NbtOps.INSTANCE, worldData);
-            class_5315 lv = class_5315.method_29023(dynamic);
+            SaveVersionInfo lv = SaveVersionInfo.fromDynamic(dynamic);
 
-            levelInfo = LevelInfo.method_28383(dynamic, class_5359.field_25393); // Sets Cheat mode enabled
+            levelInfo = LevelInfo.method_28383(dynamic, DataPackSettings.SAFE_MODE); // Sets Cheat mode enabled
 
-             levelProperties = new LevelProperties(levelInfo, DEVWORLD_GENERATOR, Lifecycle.stable())
+            levelProperties = new LevelProperties(levelInfo, DEVWORLD_GENERATOR, Lifecycle.stable())
                 .method_29029(dynamic, MinecraftClient.getInstance().getDataFixer(), 16, null, levelInfo, lv, DEVWORLD_GENERATOR, Lifecycle.stable());
 
             // Spawn Location
@@ -118,7 +118,7 @@ public class Devworld implements ModInitializer {
     }
 
     private FlatChunkGeneratorConfig getDevWorldGeneratorConfig() {
-        FlatChunkGeneratorConfig flatChunkGeneratorConfig = new FlatChunkGeneratorConfig(new class_5311(Optional.of(class_5311.field_24823), Maps.newHashMap()));
+        FlatChunkGeneratorConfig flatChunkGeneratorConfig = new FlatChunkGeneratorConfig(new StructuresConfig(Optional.of(StructuresConfig.DEFAULT_STRONGHOLD), Maps.newHashMap()));
         flatChunkGeneratorConfig.setBiome(Biomes.PLAINS);
         flatChunkGeneratorConfig.getLayers().add(new FlatChunkGeneratorLayer(1, Blocks.BEDROCK));
         flatChunkGeneratorConfig.getLayers().add(new FlatChunkGeneratorLayer(3, Blocks.STONE));
@@ -140,7 +140,7 @@ public class Devworld implements ModInitializer {
 
     public boolean loadWorld() {
         if (MinecraftClient.getInstance().getLevelStorage().levelExists(worldName)) {
-            MinecraftClient.getInstance().method_29606(worldName);
+            MinecraftClient.getInstance().startIntegratedServer(worldName);
             return true;
         }
         return false;
